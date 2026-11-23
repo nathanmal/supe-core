@@ -99,16 +99,23 @@ full copy-paste starting point.
 
 ```php
 <?php
-final class GallerySettingsPage extends \Supe\Core\Support\AbstractAdminPage {
+use Supe\Core\Support\AdminUi;
 
-    public static function slug(): string { return 'acme-gallery-settings'; }
+final class GalleryOverviewPage extends \Supe\Core\Support\AbstractAdminPage {
 
-    public function pageTitle(): string { return __( 'Gallery Settings', 'acme-gallery' ); }
+    public static function slug(): string { return 'acme-gallery'; }
+
+    public function pageTitle(): string { return __( 'Gallery', 'acme-gallery' ); }
 
     public function parentSlug(): ?string { return \Supe\Core\Admin\DashboardPage::slug(); }
 
-    public function render(): void {
-        echo '<div class="wrap"><h1>' . esc_html( $this->pageTitle() ) . '</h1></div>';
+    protected function renderContent(): void {
+        AdminUi::cardStart( __( 'Albums', 'acme-gallery' ), '', 'dashicons-format-gallery' );
+        AdminUi::table(
+            [ 'name' => __( 'Album', 'acme-gallery' ), 'count' => __( 'Images', 'acme-gallery' ) ],
+            [ [ 'name' => 'Holidays', 'count' => AdminUi::badge( '42', 'accent' ) ] ]
+        );
+        AdminUi::cardEnd();
     }
 }
 ```
@@ -122,7 +129,7 @@ final class GalleryModule extends \Supe\Core\Support\AbstractModule {
 }
 ```
 
-Only `slug()`, `pageTitle()`, and `render()` are required — `menuTitle()`, `capability()`,
+Only `slug()` and `pageTitle()` are required. `menuTitle()`, `capability()`,
 `parentSlug()`, `icon()`, and `position()` all have sensible defaults on `AbstractAdminPage`
 that you can override as needed. `parentSlug()` defaults to `null`, which registers a
 brand new top-level menu instead of a submenu — reach for that only if a page genuinely
@@ -131,7 +138,63 @@ hardcoding the string `'supe'`) so a future rename of the shared menu doesn't si
 orphan your page. A submenu can also point at any existing WordPress menu instead
 (e.g. `'options-general.php'` for Settings, `'upload.php'` for Media).
 
-Pages are collected in a single shared `AdminMenuRegistry` (owned by `Core`, one instance
+### Shared look & feel
+
+Every Supe admin page shares one branded shell, so the ecosystem looks like a single
+product rather than a set of unrelated plugins. `AbstractAdminPage::render()` outputs:
+
+- a **hero header** with the Supe mark, `pageTitle()`, and the optional `description()`
+  and `version()` (shown as a pill; usually your `Module::version()`);
+- a **tab bar** linking every page in the same Supe menu that the current user can access
+  (labelled by `tabTitle()`, which defaults to `menuTitle()`; hidden when there's only one page).
+  The family is the top-level page plus its submenus, from `AdminMenuRegistry::familyOf( $slug )`;
+- your page's own **`renderContent()`** underneath.
+
+Implement `renderContent()`, not `render()`. Overriding `render()` still works, but opts
+the page out of the shell. `render()` also returns nothing when the user lacks `capability()`.
+
+Build the content with `Supe\Core\Support\AdminUi` rather than hand-written wp-admin markup:
+
+| Helper | Output |
+|---|---|
+| `cardStart( $title, $description, $icon )` / `cardEnd()` | A content card |
+| `stats( [ [ 'label' => ..., 'value' => ..., 'icon' => ... ], ... ] )` | A row of stat tiles (`icon` optional, a full Dashicons class such as `dashicons-admin-media`) |
+| `table( $columns, $rows )` | A styled data table (cells escaped unless `SafeHtml`) |
+| `badge( $text, $tone )` / `code( $text )` | Inline pills / code tokens (return `SafeHtml`, usable as table cells) |
+| `emptyState( $title, $message, $icon )` | A "nothing here yet" placeholder |
+| `notice( $message, $tone )` | An inline callout |
+
+Tones: `neutral`, `accent`, `success`, `warning`, `danger`, `info`. Every helper escapes its
+input. `Admin\AdminAssets` enqueues the styles (`assets/admin.css`, scoped to `.supe-admin`)
+as a file, only on registered Supe screens. Retheme by overriding its `--supe-*` custom
+properties.
+
+**Settings pages** extend `Supe\Core\Support\AbstractSettingsPage` and implement
+`optionGroup()`. Services register their options with `register_setting()` in that group
+and add sections and fields with `add_settings_section()` / `add_settings_field()`, using
+the page's `slug()` as the page. Each section renders as its own card, with a sticky save
+bar and `settings_errors()` handled for you. Override `emptyMessage()` to customise the
+empty state.
+
+### Asset URLs
+
+Supe packages live in the host plugin's `vendor/` directory, and in development they're
+symlinked there by a Composer path repository. PHP then sees a file's *real* path (outside
+`wp-content`), which `plugins_url()` can't turn into a URL. `Supe\Core\Support\PackageAssets`
+maps the Composer install path back to the real path, so URLs resolve through the plugin:
+
+```php
+$assets = new \Supe\Core\Support\PackageAssets( 'acme/gallery', dirname( __DIR__ ) );
+$assets->register(); // in boot(); needed even if you only register blocks
+
+wp_enqueue_style( 'acme-gallery', $assets->url( 'build/style.css' ), [], $assets->version( 'build/style.css' ) );
+```
+
+`url()` registers the mapping itself if needed. `rootFile()` gives a file in the package root
+for APIs that take a "plugin file" (e.g. `plugins_url( $path, $assets->rootFile() )`). It's a
+no-op when the package isn't symlinked.
+
+ (owned by `Core`, one instance
 across every module) and added to WordPress on `admin_menu` — top-level pages before
 submenus, so a submenu's parent always exists first.
 
