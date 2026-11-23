@@ -11,6 +11,8 @@ use Supe\Core\Exceptions\InvalidAdminPageException;
 use Supe\Core\Support\Container;
 use Supe\Core\Tests\Unit\Fixtures\DummyAdminPage;
 use Supe\Core\Tests\Unit\Fixtures\DummyAdminSubPage;
+use Supe\Core\Tests\Unit\Fixtures\DummyShellPage;
+use Supe\Core\Tests\Unit\Fixtures\DummyShellSubPage;
 use Yoast\WPTestUtils\BrainMonkey\TestCase;
 
 final class AdminMenuRegistryTest extends TestCase {
@@ -90,5 +92,41 @@ final class AdminMenuRegistryTest extends TestCase {
         $registry->registerMenus();
 
         self::assertSame( [ 'add_menu_page', 'add_submenu_page' ], $calls );
+    }
+
+    public function test_family_of_returns_the_top_level_page_then_its_submenus_from_either_member(): void {
+        $registry = new AdminMenuRegistry( new Container() );
+
+        // Child registered first on purpose — the parent must still lead.
+        $registry->addPage( DummyShellSubPage::class );
+        $registry->addPage( DummyAdminPage::class ); // unrelated menu
+        $registry->addPage( DummyShellPage::class );
+
+        $expected = [ 'acme-shell', 'acme-shell-child' ];
+
+        self::assertSame( $expected, array_keys( $registry->familyOf( 'acme-shell' ) ) );
+        self::assertSame( $expected, array_keys( $registry->familyOf( 'acme-shell-child' ) ) );
+        self::assertInstanceOf( DummyShellPage::class, $registry->familyOf( 'acme-shell' )['acme-shell'] );
+    }
+
+    public function test_family_of_reuses_one_instance_per_page(): void {
+        $registry = new AdminMenuRegistry( new Container() );
+        $registry->addPage( DummyShellPage::class );
+
+        self::assertSame(
+            $registry->familyOf( 'acme-shell' )['acme-shell'],
+            $registry->familyOf( 'acme-shell' )['acme-shell']
+        );
+    }
+
+    public function test_family_of_is_empty_for_unknown_pages_and_pages_under_a_non_supe_menu(): void {
+        $registry = new AdminMenuRegistry( new Container() );
+
+        // Parent 'acme-widget-settings' is never registered, like a page
+        // attached to e.g. 'options-general.php'.
+        $registry->addPage( DummyAdminSubPage::class );
+
+        self::assertSame( [], $registry->familyOf( 'does-not-exist' ) );
+        self::assertSame( [], $registry->familyOf( 'acme-widget-advanced' ) );
     }
 }

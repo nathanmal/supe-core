@@ -1,0 +1,565 @@
+/*
+ * Supe admin — shared look & feel for every Supe admin page.
+ *
+ * Loaded inline by Supe\Core\Admin\AdminAssets on Supe screens only, and
+ * scoped to .supe-admin so nothing leaks into the rest of wp-admin. Modules
+ * can retheme by overriding the custom properties below on .supe-admin.
+ */
+
+.supe-admin {
+    --supe-accent: #6d5dfc;
+    --supe-accent-strong: #5241e8;
+    --supe-accent-soft: #efedff;
+    --supe-pink: #ff5fa2;
+    --supe-hero-from: #120f2b;
+    --supe-hero-to: #2c1f70;
+    --supe-page-bg: #f0f0f1; /* wp-admin's own background, so the active tab merges into the page */
+    --supe-surface: #ffffff;
+    --supe-border: #e4e3ef;
+    --supe-text: #1d1b2f;
+    --supe-muted: #6b6985;
+    --supe-radius: 14px;
+    --supe-shadow: 0 1px 2px rgba(18, 15, 43, 0.04), 0 4px 16px rgba(18, 15, 43, 0.06);
+
+    margin-right: 20px;
+    color: var(--supe-text);
+}
+
+/* -------------------------------------------------------------------------
+ * Hero header
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__hero {
+    position: relative;
+    overflow: hidden;
+    margin: 12px 0 0;
+    padding: 24px 32px 28px;
+    border-radius: 18px;
+    color: #fff;
+    background:
+        radial-gradient(600px 260px at 100% 0%, rgba(255, 95, 162, 0.35), transparent 70%),
+        radial-gradient(520px 300px at 0% 120%, rgba(109, 93, 252, 0.55), transparent 70%),
+        linear-gradient(135deg, var(--supe-hero-from), var(--supe-hero-to));
+    box-shadow: 0 10px 30px rgba(18, 15, 43, 0.18);
+}
+
+/* Fine grid texture, fading out toward the bottom-left. */
+.supe-admin .supe-admin__hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+    -webkit-mask-image: linear-gradient(200deg, #000 10%, transparent 65%);
+    mask-image: linear-gradient(200deg, #000 10%, transparent 65%);
+}
+
+/* Faint hexagon watermark echoing the logo mark, fading out downward. */
+.supe-admin .supe-admin__hero::after {
+    content: "";
+    position: absolute;
+    right: 56px;
+    top: 22px;
+    width: 150px;
+    height: 173px;
+    pointer-events: none;
+    background: linear-gradient(170deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 80%);
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+
+.supe-admin .supe-admin__hero > * {
+    position: relative;
+    z-index: 1;
+}
+
+.supe-admin .supe-admin__hero--tabbed {
+    padding-bottom: 0;
+}
+
+.supe-admin .supe-admin__brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.supe-admin .supe-admin__logo {
+    display: block;
+    width: 32px;
+    height: 32px;
+    filter: drop-shadow(0 4px 10px rgba(255, 95, 162, 0.35));
+}
+
+.supe-admin .supe-admin__wordmark {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.supe-admin .supe-admin__version {
+    margin-left: auto;
+    padding: 3px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+}
+
+.supe-admin .supe-admin__title {
+    margin: 0;
+    padding: 0;
+    font-size: 30px;
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    color: #fff;
+}
+
+.supe-admin .supe-admin__description {
+    max-width: 640px;
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.72);
+}
+
+/* -------------------------------------------------------------------------
+ * Tabs — the active tab takes the page background so it "opens" into the
+ * content below, like a folder tab.
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 24px;
+}
+
+.supe-admin .supe-admin__tab {
+    padding: 11px 18px;
+    border-radius: 10px 10px 0 0;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.7);
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.supe-admin .supe-admin__tab:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.supe-admin .supe-admin__tab:focus {
+    color: #fff;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.65);
+    outline: none;
+}
+
+.supe-admin .supe-admin__tab.is-current {
+    color: var(--supe-text);
+    font-weight: 600;
+    background: var(--supe-page-bg);
+}
+
+/* -------------------------------------------------------------------------
+ * Content
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .wp-header-end + .notice,
+.supe-admin .supe-admin__content > .notice {
+    margin: 16px 0 0;
+}
+
+.supe-admin .supe-admin__content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 24px;
+}
+
+/* -------------------------------------------------------------------------
+ * Cards
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__card {
+    border: 1px solid var(--supe-border);
+    border-radius: var(--supe-radius);
+    background: var(--supe-surface);
+    box-shadow: var(--supe-shadow);
+}
+
+.supe-admin .supe-admin__card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px 24px 0;
+}
+
+.supe-admin .supe-admin__card-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    font-size: 18px;
+    color: var(--supe-accent);
+    background: var(--supe-accent-soft);
+}
+
+.supe-admin .supe-admin__card-title {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--supe-text);
+}
+
+.supe-admin .supe-admin__card-description {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--supe-muted);
+}
+
+.supe-admin .supe-admin__card-body {
+    padding: 16px 24px 24px;
+}
+
+.supe-admin .supe-admin__card-body > :first-child {
+    margin-top: 0;
+}
+
+.supe-admin .supe-admin__card-body > :last-child {
+    margin-bottom: 0;
+}
+
+/* Settings API field tables inside a card. */
+.supe-admin .supe-admin__card .form-table {
+    margin: 0;
+}
+
+.supe-admin .supe-admin__card .form-table tr + tr {
+    border-top: 1px solid var(--supe-border);
+}
+
+.supe-admin .supe-admin__card .form-table th {
+    width: 220px;
+    padding: 18px 20px 18px 0;
+    font-weight: 600;
+    color: var(--supe-text);
+}
+
+.supe-admin .supe-admin__card .form-table td {
+    padding: 14px 0;
+}
+
+.supe-admin .supe-admin__card .form-table .description {
+    color: var(--supe-muted);
+}
+
+/* -------------------------------------------------------------------------
+ * Stat tiles
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.supe-admin .supe-admin__stat {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 14px;
+    align-items: center;
+    padding: 18px 20px;
+    overflow: hidden;
+    border: 1px solid var(--supe-border);
+    border-radius: var(--supe-radius);
+    background: var(--supe-surface);
+    box-shadow: var(--supe-shadow);
+}
+
+/* Thin brand-gradient rule along the top edge. */
+.supe-admin .supe-admin__stat::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, var(--supe-accent), var(--supe-pink));
+}
+
+.supe-admin .supe-admin__stat-icon {
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    font-size: 22px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--supe-accent), var(--supe-pink));
+    box-shadow: 0 6px 14px rgba(109, 93, 252, 0.3);
+}
+
+.supe-admin .supe-admin__stat-value {
+    font-size: 24px;
+    font-weight: 650;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    color: var(--supe-text);
+}
+
+.supe-admin .supe-admin__stat-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--supe-muted);
+}
+
+/* -------------------------------------------------------------------------
+ * Tables
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--supe-border);
+    border-radius: 10px;
+}
+
+.supe-admin .supe-admin__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.supe-admin .supe-admin__table th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--supe-muted);
+    background: #f8f7fc;
+    border-bottom: 1px solid var(--supe-border);
+}
+
+.supe-admin .supe-admin__table td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--supe-border);
+}
+
+.supe-admin .supe-admin__table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.supe-admin .supe-admin__table tbody tr {
+    transition: background-color 0.12s ease;
+}
+
+.supe-admin .supe-admin__table tbody tr:hover {
+    background: #fbfaff;
+}
+
+/* -------------------------------------------------------------------------
+ * Inline tokens
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__code {
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--supe-accent-strong);
+    background: var(--supe-accent-soft);
+}
+
+.supe-admin .supe-admin__badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.supe-admin .supe-admin__badge--neutral { color: #4b4a5e; background: #ecebf2; }
+.supe-admin .supe-admin__badge--accent  { color: var(--supe-accent-strong); background: var(--supe-accent-soft); }
+.supe-admin .supe-admin__badge--success { color: #116336; background: #dcf5e6; }
+.supe-admin .supe-admin__badge--warning { color: #7a4a00; background: #fdf0d2; }
+.supe-admin .supe-admin__badge--danger  { color: #9b1c2c; background: #fde2e5; }
+.supe-admin .supe-admin__badge--info    { color: #0b4f8a; background: #dfeefb; }
+
+/* -------------------------------------------------------------------------
+ * Notices (inline callouts)
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__notice {
+    padding: 12px 16px;
+    border-left: 4px solid currentColor;
+    border-radius: 10px;
+    font-size: 13px;
+}
+
+.supe-admin .supe-admin__notice--neutral { color: #4b4a5e; background: #f3f2f8; }
+.supe-admin .supe-admin__notice--accent  { color: var(--supe-accent-strong); background: var(--supe-accent-soft); }
+.supe-admin .supe-admin__notice--success { color: #116336; background: #e9f8ef; }
+.supe-admin .supe-admin__notice--warning { color: #7a4a00; background: #fef6e4; }
+.supe-admin .supe-admin__notice--danger  { color: #9b1c2c; background: #fdeef0; }
+.supe-admin .supe-admin__notice--info    { color: #0b4f8a; background: #ecf5fd; }
+
+/* -------------------------------------------------------------------------
+ * Empty state
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__empty {
+    padding: 40px 24px;
+    text-align: center;
+    border: 1px dashed #d4d2e4;
+    border-radius: var(--supe-radius);
+    background:
+        radial-gradient(240px 120px at 50% 0%, rgba(109, 93, 252, 0.08), transparent 70%),
+        var(--supe-surface);
+}
+
+.supe-admin .supe-admin__empty-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+    border-radius: 16px;
+    font-size: 26px;
+    color: var(--supe-accent);
+    background: var(--supe-accent-soft);
+}
+
+.supe-admin .supe-admin__empty-title {
+    margin: 0;
+    padding: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--supe-text);
+}
+
+.supe-admin .supe-admin__empty-message {
+    max-width: 440px;
+    margin: 6px auto 0;
+    color: var(--supe-muted);
+}
+
+/* -------------------------------------------------------------------------
+ * Forms
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.supe-admin input[type="text"]:focus,
+.supe-admin input[type="number"]:focus,
+.supe-admin input[type="email"]:focus,
+.supe-admin input[type="url"]:focus,
+.supe-admin select:focus,
+.supe-admin textarea:focus {
+    border-color: var(--supe-accent);
+    box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.2);
+    outline: none;
+}
+
+.supe-admin input[type="checkbox"]:checked,
+.supe-admin input[type="radio"]:checked {
+    border-color: var(--supe-accent);
+}
+
+/* Save bar sticks to the bottom of the viewport while the form is long. */
+.supe-admin .supe-admin__savebar {
+    position: sticky;
+    bottom: 12px;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 16px;
+    border: 1px solid var(--supe-border);
+    border-radius: var(--supe-radius);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 8px 24px rgba(18, 15, 43, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+.supe-admin .button-primary {
+    min-height: 36px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 9px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--supe-accent), var(--supe-accent-strong));
+    box-shadow: 0 4px 12px rgba(109, 93, 252, 0.3);
+    text-shadow: none;
+}
+
+.supe-admin .button-primary:hover,
+.supe-admin .button-primary:focus {
+    background: linear-gradient(135deg, var(--supe-accent-strong), var(--supe-accent-strong));
+    box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.25), 0 4px 12px rgba(109, 93, 252, 0.3);
+}
+
+/* -------------------------------------------------------------------------
+ * Small screens (wp-admin's own mobile breakpoint)
+ * ---------------------------------------------------------------------- */
+
+@media screen and (max-width: 782px) {
+    .supe-admin {
+        margin-right: 10px;
+    }
+
+    .supe-admin .supe-admin__hero {
+        padding: 20px 20px 24px;
+        border-radius: 14px;
+    }
+
+    .supe-admin .supe-admin__title {
+        font-size: 24px;
+    }
+
+    .supe-admin .supe-admin__tab {
+        padding: 9px 12px;
+    }
+
+    .supe-admin .supe-admin__card-header,
+    .supe-admin .supe-admin__card-body {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+
+    .supe-admin .supe-admin__card .form-table th {
+        width: auto;
+        padding-bottom: 4px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .supe-admin * {
+        transition: none !important;
+    }
+}
