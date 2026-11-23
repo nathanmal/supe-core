@@ -16,7 +16,7 @@ define( 'ABSPATH', getenv( 'WP_TESTS_ABSPATH' ) ?: '/path/to/wordpress/' );
 define( 'WP_DEBUG', true );
 
 // ── Database (use a dedicated, disposable test database — it gets wiped) ──
-define( 'DB_NAME',     getenv( 'WP_TESTS_DB_NAME' )     ?: 'supe_test' );
+define( 'DB_NAME',     getenv( 'WP_TESTS_DB_NAME' )     ?: 'supe_phpunit' );
 define( 'DB_USER',     getenv( 'WP_TESTS_DB_USER' )     ?: 'root' );
 define( 'DB_PASSWORD', getenv( 'WP_TESTS_DB_PASSWORD' ) ?: '' );
 define( 'DB_HOST',     getenv( 'WP_TESTS_DB_HOST' )     ?: 'localhost' );

@@ -6,6 +6,7 @@ namespace Supe\Core\Admin;
 
 use Supe\Core\Core;
 use Supe\Core\Support\AbstractAdminPage;
+use Supe\Core\Support\AdminUi;
 
 /**
  * DashboardPage
@@ -32,6 +33,18 @@ final class DashboardPage extends AbstractAdminPage {
         return __( 'Supe', 'supe' );
     }
 
+    public function tabTitle(): string {
+        return __( 'Overview', 'supe' );
+    }
+
+    public function description(): string {
+        return __( 'Every Supe module running on this site, in one place.', 'supe' );
+    }
+
+    public function version(): string {
+        return Core::VERSION;
+    }
+
     public function icon(): string {
         return 'dashicons-superhero-alt';
     }
@@ -40,28 +53,61 @@ final class DashboardPage extends AbstractAdminPage {
         return 80;
     }
 
-    public function render(): void {
-        $loaded = Core::getInstance()->getRegistry()->getLoadedModules();
+    protected function renderContent(): void {
+        $core   = Core::getInstance();
+        $loaded = $core->getRegistry()->getLoadedModules();
 
-        echo '<div class="wrap">';
-        echo '<h1>' . esc_html( $this->pageTitle() ) . '</h1>';
+        AdminUi::stats( [
+            [
+                'label' => __( 'Modules loaded', 'supe' ),
+                'value' => count( $loaded ),
+                'icon'  => 'dashicons-screenoptions',
+            ],
+            [
+                'label' => __( 'Admin pages', 'supe' ),
+                'value' => count( $core->getAdminMenuRegistry()->getPages() ),
+                'icon'  => 'dashicons-admin-page',
+            ],
+            [
+                'label' => __( 'Supe Core', 'supe' ),
+                'value' => 'v' . Core::VERSION,
+                'icon'  => 'dashicons-superhero-alt',
+            ],
+        ] );
+
+        AdminUi::cardStart(
+            __( 'Loaded Modules', 'supe' ),
+            __( 'The winning version of each registered module, as booted on this request.', 'supe' ),
+            'dashicons-screenoptions'
+        );
 
         if ( empty( $loaded ) ) {
-            echo '<p>' . esc_html__( 'No Supe modules are currently loaded.', 'supe' ) . '</p>';
-            echo '</div>';
-            return;
+            AdminUi::emptyState(
+                __( 'No modules loaded', 'supe' ),
+                __( 'No Supe modules are currently loaded.', 'supe' ),
+                'dashicons-screenoptions'
+            );
+        } else {
+            $rows = [];
+
+            foreach ( $loaded as $id => $version ) {
+                $rows[] = [
+                    'module'  => AdminUi::code( (string) $id ),
+                    'version' => AdminUi::badge( 'v' . $version, 'accent' ),
+                    'status'  => AdminUi::badge( __( 'Active', 'supe' ), 'success' ),
+                ];
+            }
+
+            AdminUi::table(
+                [
+                    'module'  => __( 'Module', 'supe' ),
+                    'version' => __( 'Version', 'supe' ),
+                    'status'  => __( 'Status', 'supe' ),
+                ],
+                $rows
+            );
         }
 
-        echo '<h2>' . esc_html__( 'Loaded Modules', 'supe' ) . '</h2>';
-        echo '<table class="widefat striped"><thead><tr>';
-        echo '<th>' . esc_html__( 'Module', 'supe' ) . '</th>';
-        echo '<th>' . esc_html__( 'Version', 'supe' ) . '</th>';
-        echo '</tr></thead><tbody>';
-
-        foreach ( $loaded as $id => $version ) {
-            echo '<tr><td><code>' . esc_html( $id ) . '</code></td><td>' . esc_html( $version ) . '</td></tr>';
-        }
-
-        echo '</tbody></table></div>';
+        AdminUi::cardEnd();
     }
 }

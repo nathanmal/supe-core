@@ -6,6 +6,7 @@ namespace AcmeCorp\GalleryModule;
 
 use Supe\Core\Admin\DashboardPage;
 use Supe\Core\Support\AbstractAdminPage;
+use Supe\Core\Support\AdminUi;
 
 /**
  * Example admin page: Acme Gallery Settings
@@ -15,9 +16,14 @@ use Supe\Core\Support\AbstractAdminPage;
  *
  *   $this->addAdminPage( GallerySettingsPage::class );
  *
- * Only slug(), pageTitle(), and render() are required — every other method
- * (menuTitle, capability, parentSlug, icon, position) has a sensible
- * default from AbstractAdminPage that you can override as needed.
+ * Only slug() and pageTitle() are required. Every other method
+ * (menuTitle, capability, parentSlug, icon, position, description, version,
+ * tabTitle) has a sensible default from AbstractAdminPage that you can
+ * override as needed.
+ *
+ * Implement renderContent(), not render(): render() wraps it in the shared
+ * Supe shell (branded header + tab bar). For a Settings API page, extend
+ * AbstractSettingsPage instead and implement optionGroup().
  */
 final class GallerySettingsPage extends AbstractAdminPage {
 
@@ -42,14 +48,24 @@ final class GallerySettingsPage extends AbstractAdminPage {
         return 'manage_options';
     }
 
+    public function description(): string {
+        return __( 'Choose how galleries look and behave across the site.', 'acme-gallery' );
+    }
+
+    public function version(): string {
+        return GalleryModule::version(); // shown as a pill in the header
+    }
+
     // -------------------------------------------------------------------------
     // Output
     // -------------------------------------------------------------------------
 
-    public function render(): void {
+    protected function renderContent(): void {
         // $repo = $this->make( 'acme.gallery.repository' );
 
-        echo '<div class="wrap"><h1>' . esc_html( $this->pageTitle() ) . '</h1></div>';
+        AdminUi::cardStart( __( 'Albums', 'acme-gallery' ), __( 'Every album on this site.', 'acme-gallery' ), 'dashicons-format-gallery' );
+        AdminUi::emptyState( __( 'No albums yet', 'acme-gallery' ), __( 'Albums you create will be listed here.', 'acme-gallery' ) );
+        AdminUi::cardEnd();
 
         // Or, for anything beyond trivial markup, render a template file:
         // $this->view( __DIR__ . '/views/settings.php', [ 'repo' => $repo ] );

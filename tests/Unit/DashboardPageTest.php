@@ -14,6 +14,15 @@ use Yoast\WPTestUtils\BrainMonkey\TestCase;
 
 final class DashboardPageTest extends TestCase {
 
+    protected function set_up(): void {
+        parent::set_up();
+
+        $this->stubTranslationFunctions();
+        $this->stubEscapeFunctions();
+        Functions\when( 'current_user_can' )->justReturn( true );
+        Functions\when( 'admin_url' )->alias( static fn ( string $path ): string => 'https://example.test/wp-admin/' . $path );
+    }
+
     protected function tear_down(): void {
         // Core::getInstance() is a process-wide singleton; reset it between
         // tests so each test gets an isolated registry/container.
@@ -30,11 +39,12 @@ final class DashboardPageTest extends TestCase {
         self::assertSame( 'supe', DashboardPage::slug() );
         self::assertNull( $page->parentSlug() );
         self::assertSame( 'dashicons-superhero-alt', $page->icon() );
+        self::assertSame( 'Supe', $page->menuTitle() ); // sidebar label stays the brand name
+        self::assertSame( 'Overview', $page->tabTitle() );
+        self::assertSame( Core::VERSION, $page->version() );
     }
 
     public function test_render_lists_loaded_modules(): void {
-        Functions\stubs( [ '__', 'esc_html', 'esc_html__' ] );
-
         DummyModuleV2::$bootCount = 0;
 
         Actions\expectDone( 'supe/before_boot' )->once()->whenHappen(
@@ -53,12 +63,12 @@ final class DashboardPageTest extends TestCase {
         $output = ob_get_clean();
 
         self::assertStringContainsString( 'acme/widget', $output );
-        self::assertStringContainsString( '2.0.0', $output );
+        self::assertStringContainsString( 'v2.0.0', $output );
+        self::assertStringContainsString( 'Modules loaded', $output );
+        self::assertStringContainsString( '<span class="supe-admin__stat-value">1</span>', $output );
     }
 
     public function test_render_shows_a_placeholder_when_nothing_is_loaded(): void {
-        Functions\stubs( [ '__', 'esc_html', 'esc_html__' ] );
-
         $page = new DashboardPage( Core::getInstance()->getContainer() );
 
         ob_start();

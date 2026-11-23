@@ -24,6 +24,9 @@ final class AdminMenuRegistry {
     /** @var array<string, class-string<AdminPageInterface>> keyed by page slug */
     private array $pages = [];
 
+    /** @var array<string, AdminPageInterface> lazily-built page instances, keyed by slug */
+    private array $instances = [];
+
     private Container $container;
 
     public function __construct( Container $container ) {
@@ -56,6 +59,7 @@ final class AdminMenuRegistry {
         $slug = $pageClass::slug();
 
         $this->pages[ $slug ] = $pageClass;
+        unset( $this->instances[ $slug ] );
 
         /**
          * Fires whenever an admin page is added to the registry.
@@ -79,8 +83,8 @@ final class AdminMenuRegistry {
         $topLevel = [];
         $submenu  = [];
 
-        foreach ( $this->pages as $slug => $pageClass ) {
-            $page = new $pageClass( $this->container );
+        foreach ( array_keys( $this->pages ) as $slug ) {
+            $page = $this->page( $slug );
 
             if ( $page->parentSlug() === null ) {
                 $topLevel[ $slug ] = $page;
@@ -140,11 +144,53 @@ final class AdminMenuRegistry {
     }
 
     /**
+     * Every page in the same menu as $slug: that menu's top-level page first,
+     * then each of its submenu pages in registration order. Used to render
+     * the shared tab bar. Empty when $slug isn't registered or is a submenu
+     * of a non-Supe menu (e.g. 'options-general.php').
+     *
+     * @return array<string, AdminPageInterface> keyed by slug
+     */
+    public function familyOf( string $slug ): array {
+        if ( ! isset( $this->pages[ $slug ] ) ) {
+            return [];
+        }
+
+        $root = $this->page( $slug )->parentSlug() ?? $slug;
+
+        if ( ! isset( $this->pages[ $root ] ) ) {
+            return [];
+        }
+
+        $family = [ $root => $this->page( $root ) ];
+
+        foreach ( array_keys( $this->pages ) as $candidate ) {
+            if ( $candidate !== $root && $this->page( $candidate )->parentSlug() === $root ) {
+                $family[ $candidate ] = $this->page( $candidate );
+            }
+        }
+
+        return $family;
+    }
+
+    /**
      * Returns all registered pages, keyed by slug (useful for debugging).
      *
      * @return array<string, class-string<AdminPageInterface>>
      */
     public function getPages(): array {
         return $this->pages;
+    }
+
+    /**
+     * The single shared instance of a registered page, built on first use.
+     */
+    private function page( string $slug ): AdminPageInterface {
+        if ( ! isset( $this->instances[ $slug ] ) ) {
+            $pageClass                = $this->pages[ $slug ];
+            $this->instances[ $slug ] = new $pageClass( $this->container );
+        }
+
+        return $this->instances[ $slug ];
     }
 }

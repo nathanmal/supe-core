@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Supe\Core;
 
+use Supe\Core\Admin\AdminAssets;
 use Supe\Core\Admin\AdminMenuRegistry;
 use Supe\Core\Admin\DashboardPage;
 use Supe\Core\Registry\ModuleRegistry;
 use Supe\Core\Support\Container;
+use Supe\Core\Support\PackageAssets;
 
 /**
  * Supe Core
@@ -17,6 +19,9 @@ use Supe\Core\Support\Container;
  * ModuleRegistry::register() from their own bootstrap files.
  */
 final class Core {
+
+    /** Keep in sync with composer.json's "version". */
+    public const VERSION = '1.0.0';
 
     private static ?self $instance = null;
 
@@ -34,6 +39,13 @@ final class Core {
         $this->adminMenuRegistry->addPage( DashboardPage::class );
 
         add_action( 'admin_menu', [ $this->adminMenuRegistry, 'registerMenus' ] );
+
+        $assets = new AdminAssets(
+            $this->adminMenuRegistry,
+            new PackageAssets( 'nathanmal/supe-core', dirname( __DIR__ ) )
+        );
+
+        add_action( 'admin_enqueue_scripts', [ $assets, 'enqueue' ] );
     }
 
     // -------------------------------------------------------------------------
