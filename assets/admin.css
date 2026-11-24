@@ -1,7 +1,7 @@
 /*
  * Supe admin — shared look & feel for every Supe admin page.
  *
- * Loaded inline by Supe\Core\Admin\AdminAssets on Supe screens only, and
+ * Enqueued by Supe\Core\Admin\AdminAssets on Supe screens only, and
  * scoped to .supe-admin so nothing leaks into the rest of wp-admin. Modules
  * can retheme by overriding the custom properties below on .supe-admin.
  */
@@ -233,6 +233,18 @@
     color: var(--supe-muted);
 }
 
+.supe-admin .supe-admin__card-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.supe-admin .supe-admin__card-action,
+.supe-admin .supe-admin__subsection-action {
+    flex: none;
+    margin-left: auto;
+    padding-top: 2px;
+}
+
 .supe-admin .supe-admin__card-body {
     padding: 16px 24px 24px;
 }
@@ -243,6 +255,118 @@
 
 .supe-admin .supe-admin__card-body > :last-child {
     margin-bottom: 0;
+}
+
+/* An off toggle in a card / sub-section header dims what it switches off. */
+.supe-admin .supe-admin__card:has(> .supe-admin__card-header .supe-admin__toggle-input:not(:checked)) > .supe-admin__card-body,
+.supe-admin .supe-admin__subsection:has(> .supe-admin__subsection-header .supe-admin__toggle-input:not(:checked)) > .supe-admin__subsection-body {
+    opacity: 0.5;
+    transition: opacity 0.15s ease;
+}
+
+/* -------------------------------------------------------------------------
+ * Sub-sections (a titled group inside a card body)
+ * ---------------------------------------------------------------------- */
+
+.supe-admin .supe-admin__subsection + .supe-admin__subsection,
+.supe-admin .supe-admin__card-body > :not(.supe-admin__subsection) + .supe-admin__subsection {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--supe-border);
+}
+
+.supe-admin .supe-admin__subsection-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.supe-admin .supe-admin__subsection-heading {
+    flex: 1;
+    min-width: 0;
+}
+
+.supe-admin .supe-admin__subsection-title {
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--supe-text);
+}
+
+.supe-admin .supe-admin__subsection-description {
+    margin: 2px 0 0;
+    font-size: 13px;
+    color: var(--supe-muted);
+}
+
+/* Collapsible sub-sections (<details>): the whole heading is the button. */
+.supe-admin .supe-admin__subsection--collapsible > .supe-admin__subsection-header {
+    align-items: center;
+    margin: -6px -10px 0;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    list-style: none;
+    transition: background-color 0.12s ease;
+}
+
+.supe-admin .supe-admin__subsection--collapsible > .supe-admin__subsection-header::-webkit-details-marker {
+    display: none;
+}
+
+.supe-admin .supe-admin__subsection--collapsible > .supe-admin__subsection-header:hover {
+    background: #f8f7fc;
+}
+
+.supe-admin .supe-admin__subsection--collapsible > .supe-admin__subsection-header:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--supe-accent);
+}
+
+.supe-admin .supe-admin__subsection--collapsible[open] > .supe-admin__subsection-header {
+    margin-bottom: 12px;
+}
+
+.supe-admin .supe-admin__subsection-chevron {
+    flex: none;
+    color: var(--supe-muted);
+    transition: transform 0.15s ease;
+}
+
+.supe-admin .supe-admin__subsection--collapsible[open] > .supe-admin__subsection-header .supe-admin__subsection-chevron {
+    transform: rotate(180deg);
+}
+
+.supe-admin .supe-admin__subsection--collapsible > .supe-admin__subsection-body > .supe-admin__subsection-action {
+    margin-bottom: 12px;
+}
+
+/* Icon-only button, e.g. "refresh" in a card header. */
+.supe-admin .supe-admin__icon-button {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--supe-border);
+    border-radius: 9px;
+    color: var(--supe-muted);
+    background: var(--supe-surface);
+    text-decoration: none;
+    transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+}
+
+.supe-admin .supe-admin__icon-button:hover {
+    color: var(--supe-accent-strong);
+    border-color: var(--supe-accent);
+    background: var(--supe-accent-soft);
+}
+
+.supe-admin .supe-admin__icon-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.3);
 }
 
 /* Settings API field tables inside a card. */
@@ -487,9 +611,181 @@
     outline: none;
 }
 
+/* WordPress fills checked boxes/radios with the admin color scheme; use the Supe accent instead. */
 .supe-admin input[type="checkbox"]:checked,
 .supe-admin input[type="radio"]:checked {
     border-color: var(--supe-accent);
+    background: var(--supe-accent);
+}
+
+/* Toggle switch: a checkbox with role="switch", drawn as a track + knob. */
+.supe-admin .supe-admin__toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+.supe-admin .supe-admin__toggle-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    opacity: 0;
+}
+
+.supe-admin .supe-admin__toggle-track {
+    position: relative;
+    flex: none;
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    background: #c9c7d8;
+    transition: background-color 0.15s ease;
+}
+
+.supe-admin .supe-admin__toggle-track::after {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(18, 15, 43, 0.25);
+    transition: transform 0.15s ease;
+}
+
+.supe-admin .supe-admin__toggle-input:checked + .supe-admin__toggle-track {
+    background: var(--supe-accent);
+}
+
+.supe-admin .supe-admin__toggle-input:checked + .supe-admin__toggle-track::after {
+    transform: translateX(16px);
+}
+
+.supe-admin .supe-admin__toggle-input:focus-visible + .supe-admin__toggle-track {
+    box-shadow: 0 0 0 3px rgba(109, 93, 252, 0.35);
+}
+
+.supe-admin .supe-admin__toggle-input:disabled + .supe-admin__toggle-track {
+    opacity: 0.5;
+}
+
+.supe-admin .supe-admin__toggle:has(.supe-admin__toggle-input:disabled) {
+    cursor: not-allowed;
+}
+
+.supe-admin .supe-admin__toggle-label {
+    font-weight: 500;
+}
+
+/* Number input with a unit after it ("2560 px"). */
+.supe-admin .supe-admin__input-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.supe-admin .supe-admin__input-group input[type="number"] {
+    width: 96px;
+}
+
+.supe-admin .supe-admin__input-unit {
+    color: var(--supe-muted);
+}
+
+/* Radio group with optional per-choice descriptions. */
+.supe-admin .supe-admin__choices {
+    display: grid;
+    gap: 10px;
+}
+
+.supe-admin .supe-admin__choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.supe-admin .supe-admin__choice input[type="radio"] {
+    margin-top: 2px;
+}
+
+.supe-admin .supe-admin__choice-text {
+    display: grid;
+    gap: 2px;
+}
+
+.supe-admin .supe-admin__choice-label {
+    font-weight: 500;
+}
+
+.supe-admin .supe-admin__choice-description {
+    font-size: 13px;
+    color: var(--supe-muted);
+}
+
+.supe-admin .supe-admin__toggle + .description,
+.supe-admin .supe-admin__input-group + .description,
+.supe-admin .supe-admin__choices + .description {
+    margin-top: 6px;
+}
+
+/* Editable table (SettingsField::table()). */
+.supe-admin .supe-admin__table--form td {
+    padding: 8px 12px;
+}
+
+.supe-admin .supe-admin__table--form input[type="text"] {
+    width: 100%;
+    min-width: 140px;
+}
+
+.supe-admin .supe-admin__table--form input[type="number"] {
+    width: 84px;
+}
+
+.supe-admin .supe-admin__table--form .supe-admin__input-group {
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.supe-admin .supe-admin__table-locked {
+    color: var(--supe-muted);
+    white-space: nowrap;
+}
+
+.supe-admin .supe-admin__table-row-actions {
+    width: 1%;
+    text-align: right;
+}
+
+.supe-admin .supe-admin__table-remove {
+    color: var(--supe-muted);
+    text-decoration: none;
+}
+
+.supe-admin .supe-admin__table-remove:hover,
+.supe-admin .supe-admin__table-remove:focus {
+    color: #b32d2e;
+}
+
+.supe-admin .supe-admin__table-actions {
+    margin: 10px 0 0;
+}
+
+.supe-admin .supe-admin__table-actions .dashicons {
+    margin-top: 4px;
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+.supe-admin .supe-admin__table-field + .description {
+    margin-top: 8px;
 }
 
 /* Save bar sticks to the bottom of the viewport while the form is long. */

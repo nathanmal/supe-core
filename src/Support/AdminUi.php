@@ -20,6 +20,9 @@ final class AdminUi {
     /** Badge / notice tones understood by admin.css. */
     public const TONES = [ 'neutral', 'accent', 'success', 'warning', 'danger', 'info' ];
 
+    /** @var list<string> Closing markup for open subsections, innermost last. */
+    private static array $subsectionClosers = [];
+
     // -------------------------------------------------------------------------
     // Brand
     // -------------------------------------------------------------------------
@@ -66,19 +69,22 @@ final class AdminUi {
     /**
      * Open a content card. Always pair with cardEnd().
      *
-     * @param string $icon Optional dashicon class, e.g. "dashicons-admin-media".
+     * @param string        $icon   Optional dashicon class, e.g. "dashicons-admin-media".
+     * @param SafeHtml|null $action Optional control at the right of the header, e.g. a
+     *                              SettingsField::toggle() that switches the whole card on/off.
+     *                              While a toggle there is off, the card body is dimmed.
      */
-    public static function cardStart( string $title = '', string $description = '', string $icon = '' ): void {
+    public static function cardStart( string $title = '', string $description = '', string $icon = '', ?SafeHtml $action = null ): void {
         echo '<section class="supe-admin__card">';
 
-        if ( $title !== '' || $description !== '' ) {
+        if ( $title !== '' || $description !== '' || $action !== null ) {
             echo '<header class="supe-admin__card-header">';
 
             if ( $icon !== '' ) {
                 echo '<span class="supe-admin__card-icon dashicons ' . esc_attr( self::iconClass( $icon ) ) . '" aria-hidden="true"></span>';
             }
 
-            echo '<div>';
+            echo '<div class="supe-admin__card-heading">';
 
             if ( $title !== '' ) {
                 echo '<h2 class="supe-admin__card-title">' . esc_html( $title ) . '</h2>';
@@ -88,7 +94,13 @@ final class AdminUi {
                 echo '<p class="supe-admin__card-description">' . esc_html( $description ) . '</p>';
             }
 
-            echo '</div></header>';
+            echo '</div>';
+
+            if ( $action !== null ) {
+                echo '<div class="supe-admin__card-action">' . $action->html . '</div>'; // Already escaped (SafeHtml).
+            }
+
+            echo '</header>';
         }
 
         echo '<div class="supe-admin__card-body">';
@@ -99,6 +111,93 @@ final class AdminUi {
      */
     public static function cardEnd(): void {
         echo '</div></section>';
+    }
+
+    /**
+     * Open a titled group inside a card body, e.g. one block of related
+     * settings or one of several tables. Always pair with subsectionEnd().
+     *
+     * @param SafeHtml|null $action      Optional control at the right of the heading (same
+     *                                   behavior as cardStart()'s: an off toggle dims the body).
+     * @param bool          $collapsible Make the heading a disclosure button that shows/hides
+     *                                   the body (native <details>, no JavaScript). Needs a title.
+     *                                   A collapsible heading can't hold an $action (interactive
+     *                                   content inside <summary> isn't allowed), so it's shown at
+     *                                   the top of the body instead.
+     * @param bool          $open        Whether a collapsible group starts expanded.
+     */
+    public static function subsectionStart(
+        string $title = '',
+        string $description = '',
+        ?SafeHtml $action = null,
+        bool $collapsible = false,
+        bool $open = false
+    ): void {
+        if ( $collapsible && $title !== '' ) {
+            echo '<details class="supe-admin__subsection supe-admin__subsection--collapsible"' . ( $open ? ' open' : '' ) . '>';
+            echo '<summary class="supe-admin__subsection-header"><div class="supe-admin__subsection-heading">';
+            echo '<h3 class="supe-admin__subsection-title">' . esc_html( $title ) . '</h3>';
+
+            if ( $description !== '' ) {
+                echo '<p class="supe-admin__subsection-description">' . esc_html( $description ) . '</p>';
+            }
+
+            echo '</div><span class="supe-admin__subsection-chevron dashicons dashicons-arrow-down-alt2" aria-hidden="true"></span></summary>';
+            echo '<div class="supe-admin__subsection-body">';
+
+            if ( $action !== null ) {
+                echo '<div class="supe-admin__subsection-action">' . $action->html . '</div>'; // Already escaped (SafeHtml).
+            }
+
+            self::$subsectionClosers[] = '</div></details>';
+            return;
+        }
+
+        echo '<section class="supe-admin__subsection">';
+
+        if ( $title !== '' || $description !== '' || $action !== null ) {
+            echo '<header class="supe-admin__subsection-header"><div class="supe-admin__subsection-heading">';
+
+            if ( $title !== '' ) {
+                echo '<h3 class="supe-admin__subsection-title">' . esc_html( $title ) . '</h3>';
+            }
+
+            if ( $description !== '' ) {
+                echo '<p class="supe-admin__subsection-description">' . esc_html( $description ) . '</p>';
+            }
+
+            echo '</div>';
+
+            if ( $action !== null ) {
+                echo '<div class="supe-admin__subsection-action">' . $action->html . '</div>'; // Already escaped (SafeHtml).
+            }
+
+            echo '</header>';
+        }
+
+        echo '<div class="supe-admin__subsection-body">';
+
+        self::$subsectionClosers[] = '</div></section>';
+    }
+
+    /**
+     * Close the group opened by the matching subsectionStart().
+     */
+    public static function subsectionEnd(): void {
+        echo array_pop( self::$subsectionClosers ) ?? '</div></section>';
+    }
+
+    /**
+     * A small square link button showing only an icon (the label is kept for
+     * screen readers and as a tooltip), e.g. a "refresh" action in a card header.
+     */
+    public static function iconButton( string $url, string $label, string $icon = 'dashicons-update' ): SafeHtml {
+        return new SafeHtml(
+            '<a class="supe-admin__icon-button" href="' . esc_url( $url ) . '" title="' . esc_attr( $label ) . '">'
+            . '<span class="dashicons ' . esc_attr( self::iconClass( $icon ) ) . '" aria-hidden="true"></span>'
+            . '<span class="screen-reader-text">' . esc_html( $label ) . '</span>'
+            . '</a>'
+        );
     }
 
     /**

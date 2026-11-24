@@ -157,7 +157,9 @@ Build the content with `Supe\Core\Support\AdminUi` rather than hand-written wp-a
 
 | Helper | Output |
 |---|---|
-| `cardStart( $title, $description, $icon )` / `cardEnd()` | A content card |
+| `cardStart( $title, $description, $icon, $action )` / `cardEnd()` | A content card. `$action` (`SafeHtml`, optional) sits at the right of the header, e.g. a toggle; while a toggle there is off, the body is dimmed |
+| `subsectionStart( $title, $description, $action, $collapsible, $open )` / `subsectionEnd()` | A titled group inside a card body (same optional `$action`). `$collapsible` turns the heading into a show/hide toggle (native `<details>`, collapsed unless `$open`) |
+| `iconButton( $url, $label, $icon )` | A square icon-only link button (label kept for screen readers and as a tooltip), e.g. a refresh action as a card's `$action` |
 | `stats( [ [ 'label' => ..., 'value' => ..., 'icon' => ... ], ... ] )` | A row of stat tiles (`icon` optional, a full Dashicons class such as `dashicons-admin-media`) |
 | `table( $columns, $rows )` | A styled data table (cells escaped unless `SafeHtml`) |
 | `badge( $text, $tone )` / `code( $text )` | Inline pills / code tokens (return `SafeHtml`, usable as table cells) |
@@ -166,7 +168,8 @@ Build the content with `Supe\Core\Support\AdminUi` rather than hand-written wp-a
 
 Tones: `neutral`, `accent`, `success`, `warning`, `danger`, `info`. Every helper escapes its
 input. `Admin\AdminAssets` enqueues the styles (`assets/admin.css`, scoped to `.supe-admin`)
-as a file, only on registered Supe screens. Retheme by overriding its `--supe-*` custom
+and a small script (`assets/admin.js`, driven by `data-supe-*` attributes) as files, only on
+registered Supe screens. Retheme by overriding its `--supe-*` custom
 properties.
 
 **Settings pages** extend `Supe\Core\Support\AbstractSettingsPage` and implement
@@ -175,6 +178,33 @@ and add sections and fields with `add_settings_section()` / `add_settings_field(
 the page's `slug()` as the page. Each section renders as its own card, with a sticky save
 bar and `settings_errors()` handled for you. Override `emptyMessage()` to customise the
 empty state.
+
+Extra keys in `add_settings_section()`'s `$args` shape a section:
+
+| Key | Effect |
+|---|---|
+| `supe_parent` | Id of another section on the page: render inside that card as a sub-section (one level) |
+| `supe_description` | Text under the card / sub-section title |
+| `supe_icon` | Dashicon class for the card header (top-level only) |
+| `supe_action` | `SafeHtml`, or a callable returning it, at the right of the header (e.g. a master toggle) |
+| `supe_collapsible` | Child sections: `true` (starts collapsed) or `'open'` |
+
+**Form controls**: use `Supe\Core\Support\SettingsField::render` as the
+`add_settings_field()` callback, with `type` (`toggle`, `number`, `radio`, `text`, `table`), `option`,
+optional `key` (for array options: `option[key]`) or a full `name`, and `value`, `description`,
+`disabled`, `aria_label`, plus `label`/`hide_label` (toggle), `unit`/`min`/`max`/`step` (number),
+`choices`/`legend` (radio), `placeholder`/`maxlength`/`class` (text).
+
+`table` is an editable list: `columns` (key => `label`, `type` text/number/toggle, plus that type's
+args), `rows` (row key => values, with optional `_locked` columns, `_display` text/`SafeHtml` for
+locked cells, `_removable`), and `addable`/`add_label`/`new_row` for an "Add" button. Cells are named
+`base[rowKey][column]`; added rows get keys `new-…`; removed rows simply aren't submitted, so treat
+the submitted rows as the whole list. Add/remove is handled by `assets/admin.js` (no build step,
+enqueued on Supe screens with the stylesheet).
+Pass `'label_for' => SettingsField::id( $option, $key )` for toggles and numbers.
+`toggle()`, `number()` and `radio()` return `SafeHtml` for use elsewhere (e.g. as a `supe_action`).
+A toggle submits a hidden `0` when off, except when disabled (then nothing is submitted, so the
+sanitize callback should keep the stored value).
 
 ### Asset URLs
 

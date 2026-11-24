@@ -66,6 +66,72 @@ final class AdminUiTest extends TestCase {
         self::assertStringNotContainsString( 'supe-admin__card-header', $bare );
     }
 
+    public function test_card_header_shows_an_action_on_its_own(): void {
+        $output = $this->capture( static function (): void {
+            AdminUi::cardStart( '', '', '', AdminUi::badge( 'On' ) );
+            AdminUi::cardEnd();
+        } );
+
+        self::assertStringContainsString( 'supe-admin__card-header', $output );
+        self::assertStringContainsString( '<div class="supe-admin__card-action"><span class="supe-admin__badge', $output );
+        self::assertStringNotContainsString( 'supe-admin__card-title', $output );
+    }
+
+    public function test_subsection_wraps_its_body_with_an_optional_header(): void {
+        $output = $this->capture( static function (): void {
+            AdminUi::subsectionStart( 'WebP', 'Smaller files.', AdminUi::badge( 'x' ) );
+            echo 'BODY';
+            AdminUi::subsectionEnd();
+        } );
+
+        self::assertStringContainsString( '<h3 class="supe-admin__subsection-title">WebP</h3>', $output );
+        self::assertStringContainsString( '<p class="supe-admin__subsection-description">Smaller files.</p>', $output );
+        self::assertStringContainsString( 'supe-admin__subsection-action', $output );
+        self::assertStringContainsString( '<div class="supe-admin__subsection-body">BODY</div></section>', $output );
+
+        $bare = $this->capture( static function (): void {
+            AdminUi::subsectionStart();
+            AdminUi::subsectionEnd();
+        } );
+
+        self::assertStringNotContainsString( 'supe-admin__subsection-header', $bare );
+    }
+
+    public function test_collapsible_subsection_uses_details_and_closes_with_its_own_tag(): void {
+        $output = $this->capture( static function (): void {
+            AdminUi::subsectionStart( 'Engines', 'What the server has.', AdminUi::badge( 'act' ), true );
+            AdminUi::subsectionStart( 'Inner' ); // nested plain one closes correctly too
+            echo 'BODY';
+            AdminUi::subsectionEnd();
+            AdminUi::subsectionEnd();
+        } );
+
+        self::assertStringStartsWith( '<details class="supe-admin__subsection supe-admin__subsection--collapsible">', $output );
+        self::assertStringContainsString( '<summary class="supe-admin__subsection-header">', $output );
+        self::assertStringContainsString( '<h3 class="supe-admin__subsection-title">Engines</h3>', $output );
+        // The action can't live in <summary>, so it opens the body instead.
+        self::assertStringContainsString( '</summary><div class="supe-admin__subsection-body"><div class="supe-admin__subsection-action">', $output );
+        self::assertStringEndsWith( 'BODY</div></section></div></details>', $output );
+
+        $open = $this->capture( static function (): void {
+            AdminUi::subsectionStart( 'Open', '', null, true, true );
+            AdminUi::subsectionEnd();
+        } );
+
+        self::assertStringContainsString( '--collapsible" open>', $open );
+    }
+
+    public function test_icon_button_escapes_and_keeps_its_label_for_screen_readers(): void {
+        \Brain\Monkey\Functions\when( 'esc_url' )->alias( static fn ( $s ) => htmlspecialchars( (string) $s, ENT_QUOTES ) );
+
+        $button = (string) AdminUi::iconButton( 'https://x.test/?a=1&b=2', 'Re-check "server"' );
+
+        self::assertStringContainsString( 'href="https://x.test/?a=1&amp;b=2"', $button );
+        self::assertStringContainsString( 'title="Re-check &quot;server&quot;"', $button );
+        self::assertStringContainsString( 'dashicons dashicons-update', $button );
+        self::assertStringContainsString( '<span class="screen-reader-text">Re-check &quot;server&quot;</span>', $button );
+    }
+
     public function test_icon_class_is_reduced_to_a_single_safe_token(): void {
         $output = $this->capture( static function (): void {
             AdminUi::emptyState( 'Empty', '', 'dashicons-x" onmouseover="alert(1)' );

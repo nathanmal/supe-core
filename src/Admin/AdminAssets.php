@@ -9,9 +9,9 @@ use Supe\Core\Support\PackageAssets;
 /**
  * AdminAssets
  *
- * Enqueues the shared Supe admin stylesheet (assets/admin.css) on every
- * screen belonging to a page in the AdminMenuRegistry, and nowhere else in
- * wp-admin. The file is served from supe-core's Composer install path
+ * Enqueues the shared Supe admin stylesheet (assets/admin.css) and script
+ * (assets/admin.js) on every screen belonging to a page in the
+ * AdminMenuRegistry, and nowhere else in wp-admin. The file is served from supe-core's Composer install path
  * inside the host plugin (see PackageAssets).
  */
 final class AdminAssets {
@@ -19,6 +19,8 @@ final class AdminAssets {
     public const HANDLE = 'supe-admin';
 
     public const STYLESHEET = 'assets/admin.css';
+
+    public const SCRIPT = 'assets/admin.js';
 
     private AdminMenuRegistry $registry;
     private PackageAssets $package;
@@ -41,6 +43,14 @@ final class AdminAssets {
             $this->package->url( self::STYLESHEET ),
             [ 'dashicons' ],
             $this->package->version( self::STYLESHEET )
+        );
+
+        wp_enqueue_script(
+            self::HANDLE,
+            $this->package->url( self::SCRIPT ),
+            [],
+            $this->package->version( self::SCRIPT ),
+            [ 'in_footer' => true, 'strategy' => 'defer' ]
         );
     }
 

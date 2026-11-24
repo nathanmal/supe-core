@@ -12,7 +12,7 @@ This file only adds what's specific to `supe-core`. Before non-trivial work, rea
 
 - the loader: `Core`, `Registry\ModuleRegistry`/`ModuleCandidate`, `Support\Container`, `Support\AbstractModule`, `Contracts\*`, `Exceptions\*`, `supe()`
 - admin: `Admin\AdminMenuRegistry`, `Admin\DashboardPage` (the shared "Supe" menu), `Admin\AdminAssets`
-- the shared admin look & feel: `Support\AbstractAdminPage` (page shell), `Support\AbstractSettingsPage`, `Support\AdminUi` + `Support\SafeHtml`, and `assets/admin.css`
+- the shared admin look & feel: `Support\AbstractAdminPage` (page shell), `Support\AbstractSettingsPage`, `Support\AdminUi` + `Support\SafeHtml`, `Support\SettingsField`, and `assets/admin.css` + `assets/admin.js`
 - `Support\PackageAssets`: public URLs for files inside any Supe package
 
 Everything here is a dependency of every module, so weigh each addition against "does this belong in a module instead?" Core stays generic: no module names, option keys, or behavior.
@@ -33,6 +33,7 @@ When a module has built something general (second use, or obviously infrastructu
 ## Conventions specific to this package
 
 - Admin UI: every class in `assets/admin.css` is under `.supe-admin` and named `supe-admin__{element}` (BEM-ish), with `--supe-*` custom properties for colors. New `AdminUi` helpers escape all plain-string input, and return `SafeHtml` when meant to be nested (e.g. in table cells).
+- `assets/admin.js` is plain ES5-ish JavaScript with no build step and no dependencies, driven only by `data-supe-*` attributes that PHP builders output. Keep it small; anything bigger belongs in a module's own build.
 - The stylesheet is enqueued as a file (`AdminAssets` via `PackageAssets`), only on registered Supe screens. Don't inline it.
 - `Core::VERSION` must match `composer.json`'s `"version"`.
 - Unit tests use Brain Monkey with no WordPress. Call `$this->stubTranslationFunctions()` / `$this->stubEscapeFunctions()` explicitly (the Yoast base TestCase doesn't). A `Functions\when()` stub set in `set_up()` overrides a later `Functions\expect()` for the same function, so stub per test when a test needs to expect it.

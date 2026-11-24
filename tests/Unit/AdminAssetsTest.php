@@ -32,6 +32,7 @@ final class AdminAssetsTest extends TestCase {
         $_GET['page'] = 'some-other-plugin';
 
         Functions\expect( 'wp_enqueue_style' )->never();
+        Functions\expect( 'wp_enqueue_script' )->never();
 
         $this->assets()->enqueue();
     }
@@ -42,15 +43,16 @@ final class AdminAssetsTest extends TestCase {
         $this->assets()->enqueue();
     }
 
-    public function test_enqueues_the_shared_stylesheet_as_a_file_on_a_registered_supe_page(): void {
+    public function test_enqueues_the_shared_stylesheet_and_script_as_files_on_a_registered_supe_page(): void {
         $_GET['page'] = 'acme-shell';
 
         $root = dirname( __DIR__, 2 ); // supe-core's own root, which ships assets/admin.css
 
         Functions\expect( 'plugins_url' )
-            ->once()
-            ->with( 'assets/admin.css', $root . '/composer.json' )
-            ->andReturn( 'https://example.test/wp-content/plugins/supe/vendor/nathanmal/supe-core/assets/admin.css' );
+            ->twice()
+            ->andReturnUsing( static fn ( string $path, string $file ): string => $file === $root . '/composer.json'
+                ? 'https://example.test/wp-content/plugins/supe/vendor/nathanmal/supe-core/' . $path
+                : 'wrong-root' );
 
         Functions\expect( 'wp_enqueue_style' )
             ->once()
@@ -59,6 +61,16 @@ final class AdminAssetsTest extends TestCase {
                 'https://example.test/wp-content/plugins/supe/vendor/nathanmal/supe-core/assets/admin.css',
                 [ 'dashicons' ],
                 (string) filemtime( $root . '/assets/admin.css' )
+            );
+
+        Functions\expect( 'wp_enqueue_script' )
+            ->once()
+            ->with(
+                AdminAssets::HANDLE,
+                'https://example.test/wp-content/plugins/supe/vendor/nathanmal/supe-core/assets/admin.js',
+                [],
+                (string) filemtime( $root . '/assets/admin.js' ),
+                [ 'in_footer' => true, 'strategy' => 'defer' ]
             );
 
         // Same path for install and real dir: no symlink mapping needed.
